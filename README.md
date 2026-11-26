@@ -26,3 +26,7 @@ by the time the event ends.
 
 Finally, it'll convert those hours into stamps, and then convert the stamps into grants
 at the rate of 115 stamps per $25 grant.
+
+### In progress
+
+I'm working on a graphing system that'll let you see your progress in real time.

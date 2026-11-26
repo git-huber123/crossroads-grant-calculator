@@ -5,42 +5,171 @@
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>
-    <h1>Crossroads Grant Calculator</h1>
-    <label for="current-hours">Current hours:</label>
-    <input id="current-hours" type="number" oninput="updateCalc(false)" value="0" />
-    <hr />
-    <div id="pace-section">
-      <div id="direct-pace">
-        <p>Enter how many hours you plan to get per day (average)</p>
-        <label for="direct-pace-input">Hours per day</label>
-        <input id="direct-pace-input" oninput="updateCalc(false)" value="1" />
+    <div>
+      <div id="header-btns">
+        <button class="bigbtn" onclick="switchPage('calculator')">Calculator</button>
+        <button class="bigbtn" onclick="switchPage('log')">Log</button>
+        <button class="bigbtn" onclick="switchPage('graph')">Graph view</button>
       </div>
-
-      <div id="calculated-pace" class="hidden">
-        <p>Enter how many hours you had on a previous date</p>
-        <label for="calculated-pace-date-input">Date:</label>
-        <input
-          id="calculated-pace-date-input"
-          placeholder="MM/DD/YYYY"
-          oninput="updateCalc(false)"
-        />
-        <label for="calculated-pace-hours-input">Hours:</label>
-        <input id="calculated-pace-hours-input" oninput="updateCalc(false)" />
+      <div id="goal-div">
+        <p id="goal-label">0 hours out of 100 hours</p>
+        <div id="goal-bar"></div>
       </div>
-      <button id="switch-pace-type" onclick="switchPaceType()">
-        Switch to auto-calculating pace
-      </button>
     </div>
+
     <hr />
-    <button onclick="updateCalc()">Calculate</button>
-    <h4 id="output">Total hours:</h4>
-    <h4 id="grant">Grant money:</h4>
-    <hr />
-    <p>Optional values</p>
-    <label for="end-date">End date:</label>
-    <input id="end-date" value="2/21/2027" />
+    <div id="calculator-page">
+      <h1>Crossroads Grant Calculator</h1>
+      <label for="current-hours">Current hours:</label>
+      <input id="current-hours" oninput="updateCalc(false)" value="0" />
+      <label for="goal">Goal hours:</label>
+      <input id="goal" type="number" value="100" />
+      <hr />
+      <div id="pace-section">
+        <div id="direct-pace">
+          <p>Enter how many hours you plan to get per day (average)</p>
+          <label for="direct-pace-input">Hours per day</label>
+          <input id="direct-pace-input" oninput="updateCalc(false)" value="1" />
+        </div>
+
+        <div id="calculated-pace" class="hidden">
+          <p>Enter how many hours you had on a previous date</p>
+          <label for="calculated-pace-date-input">Date:</label>
+          <input
+            id="calculated-pace-date-input"
+            placeholder="MM/DD/YYYY"
+            oninput="updateCalc(false)"
+          />
+          <label for="calculated-pace-hours-input">Hours:</label>
+          <input id="calculated-pace-hours-input" oninput="updateCalc(false)" />
+        </div>
+        <button id="switch-pace-type" onclick="switchPaceType()">
+          Switch to auto-calculating pace
+        </button>
+      </div>
+      <hr />
+      <button onclick="updateCalc()">Calculate</button>
+      <h4 id="output">Total hours:</h4>
+      <h4 id="grant">Grant money:</h4>
+      <hr />
+      <p>Optional values</p>
+      <label for="end-date">End date:</label>
+      <input id="end-date" value="2/21/2027" />
+    </div>
+
+    <div id="log-page" class="hidden">
+      <h1>Hours Logger</h1>
+      <label for="log-date">Date:</label>
+      <input id="log-date" />
+      <label for="log-hours">Total hours:</label>
+      <input for="log-hours" />
+      <button onclick="log()">Log</button>
+    </div>
+
+    <div id="graph-page" class="hidden">
+      <h1>Graph View</h1>
+      <canvas id="graph"></canvas>
+    </div>
 
     <script>
+      function log() {
+        if (logs[date] && !confirm("This date already has a log, overwrite it?")) return;
+        const date = e("log-date").value;
+        const hours = e("log-hours").value;
+        logs[date] = { date, hours };
+        renderLogsAndGraph();
+      }
+
+      // This time, I understood the functions myself, instead of just copy and pasting from AI
+      function line(x1, y1, x2, y2, color = "white", width = 3) {
+        // Start the path, kinda in the name
+        ctx.beginPath();
+        // Move to the first point, this way it doesn't create an actual path but just sets up the line
+        ctx.moveTo(x1, y1);
+        // Actually make the path by creating a line to the 2nd point (NOT moving to it)
+        ctx.lineTo(x2, y2);
+        // set the color and width of the line
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        // now that the line is finalized (path, color, width), draw it
+        ctx.stroke();
+      }
+
+      // this time, I was able to write the function (almost) myself, using what I just learnt from line()
+      function circle(x, y, radius, color = "white") {
+        // same thing, start path
+        ctx.beginPath();
+        // make an arc at the center point, starting at 0 deg and going to 360 deg (2pi rads), aka a CIRCLE
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        // set color and actually fill the circle in
+        ctx.strokeStyle = color;
+        ctx.fill();
+      }
+
+      const graph = document.getElementById("graph");
+      const ctx = graph.getContext("2d");
+      graph.width = 1600;
+      graph.height = 1000;
+
+      function renderLogsAndGraph() {
+        renderGraph();
+        renderLogs();
+      }
+
+      function renderGraph() {
+        // these 2 variables are supplied by ai, since I have no clue what the min and max are, unlike with +/- infinity
+        let minDate = "-271821-04-20T00:00:00.000Z";
+        let maxDate = "+275760-09-13T00:00:00.000Z";
+        ctx.clearRect(0, 0, graph.width, graph.height);
+        if (Object.entries(logs).length === 0) return;
+        for (const [date, v] of Object.entries(logs)) {
+          const hours = v.hours;
+          if (Date.parse(date) < Date.parse(minDate)) minDate = date;
+          if (Date.parse(date) > Date.parse(maxDate)) maxDate = date;
+        }
+      }
+
+      let hours = localStorage.getItem("hours") || 0;
+      let pace = localStorage.getItem("pace") || 1;
+      let end = localStorage.getItem("end") || "2/21/2027";
+      let goal = localStorage.getItem("goal") || 100;
+      let logs = localStorage.getItem("logs") || {};
+      e("current-hours").value = hours;
+      e("direct-pace").value = pace;
+      e("end-date").value = end;
+      e("goal").value = goal;
+
+      function e(e) {
+        return document.getElementById(e);
+      }
+      function updateRenderedValues() {
+        //hours = localStorage.getItem("hours") || 0;
+        //pace = localStorage.getItem("pace") || 1;
+        //end = localStorage.getItem("end") || "2/21/2027";
+        //goal = localStorage.getItem("goal") || 100;
+
+        e("goal-label").textContent = hours + " hours out of " + goal + " hours";
+        e("goal-bar").style.setProperty("--fill", Math.round((hours / goal) * 100) + "%");
+      }
+      function saveValues() {
+        goal = e("goal").value;
+        localStorage.setItem("hours", hours || 0);
+        localStorage.setItem("pace", pace || 1);
+        localStorage.setItem("end", end || 0);
+        localStorage.setItem("goal", goal || 100);
+        localStorage.setItem("logs", logs || {});
+        updateRenderedValues();
+      }
+      updateRenderedValues();
+      function switchPage(p) {
+        currentPage = p;
+        if (p === "graph") renderLogsAndGraph();
+        for (const t of ["calculator", "log", "graph"]) {
+          document.getElementById(t + "-page").classList.add("hidden");
+        }
+        document.getElementById(p + "-page").classList.remove("hidden");
+      }
+      let currentPage = "calculator";
       let paceType = "direct";
       function switchPaceType() {
         const d = document.getElementById("direct-pace");
@@ -59,12 +188,12 @@
       }
 
       function updateCalc(run = true) {
-        if (!run) return;
+        //if (!run) return;
         // This line, 47, is written by AI, but I can understand it: Get the date in EST, formatted as MM/DD/YYYY and convert it into MS
         const current = Date.parse(
           new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" }),
         );
-        let pace = Number(document.getElementById("direct-pace-input").value);
+        pace = Number(document.getElementById("direct-pace-input").value);
         if (paceType === "calculated") {
           let diff =
             Date.parse(new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" })) -
@@ -82,14 +211,16 @@
         const end = Number(Date.parse(document.getElementById("end-date").value));
         const timeTillEnd = Math.round((end - current) / (1000 * 60 * 60 * 24));
         const hoursGained = timeTillEnd * pace;
-        const hours = Number(document.getElementById("current-hours").value) + hoursGained;
-        if (typeof hours !== "number" || hours === Infinity) {
+        const endHours = Number(document.getElementById("current-hours").value) + hoursGained;
+        if (typeof endHours !== "number" || endHours === Infinity) {
           error("Invalid input");
           return;
         }
-        document.getElementById("output").textContent = `Total hours: ${hours}`;
+        hours = Number(document.getElementById("current-hours").value);
+        document.getElementById("output").textContent = `Total hours: ${endHours}`;
         document.getElementById("grant").textContent =
-          `Grant money: $${Math.floor((hours * 30) / 115) * 25}`;
+          `Grant money: $${Math.floor((endHours * 30) / 115) * 25}`;
+        saveValues();
       }
       function error(msg) {
         alert(msg);

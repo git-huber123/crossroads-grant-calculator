@@ -2,12 +2,52 @@
   display: none;
 }
 
+#header-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  height: 10vh;
+}
+
+#graph {
+  width: 100%;
+  aspect-ratio: 16/10;
+  max-height: 90vh;
+  max-width: 90vw;
+  background-color: black;
+}
+
+#goal-bar {
+  --fill: 10%;
+  border-radius: 10px;
+  width: 80%;
+  box-sizing: border-box;
+  height: 25px;
+  background: linear-gradient(to right, #3b82f6 var(--fill), black var(--fill));
+}
+
+#goal-div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-direction: row;
+}
+
+#goal-label {
+  width: fit-content;
+}
+
 hr {
   border: none;
   margin: 24px 0px;
   height: 5px;
   background-color: darkslategray;
   border-radius: 20px;
+}
+
+body {
+  background-color: peachpuff;
 }
 
 button {
