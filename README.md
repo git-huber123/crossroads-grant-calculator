@@ -19,12 +19,10 @@ you had at a previous date.
 
 Say you have 20 hours, and 2 days ago you had 15 hours. If the date is 11/26/2026, you
 input 20 for the "today" box, and then in the pace section, pick "Previous Date", input
-11/24/2026 and 15 hours, and press calculate. It should give you 2.5 hours per day.
+11/24/2026 and 15 hours.
 
-Now that it has the pace, it'll auto-update and display how many hours you'll have
-by the time the event ends, as well as giving you monthly "check in" benchmarks (
-e.g. on 12/26/2026, at the same pace, I should have 92.5 hours, at the pace of
-2.5 hours per day)
+Now that it has the pace, it'll use the pace whne calculating and display how many hours you'll have
+by the time the event ends.
 
 Finally, it'll convert those hours into stamps, and then convert the stamps into grants
-at the rate of ~$6.52 per hour.
+at the rate of 115 stamps per $25 grant.

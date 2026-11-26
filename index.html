@@ -1,0 +1,99 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Grant Calculator</title>
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <h1>Crossroads Grant Calculator</h1>
+    <label for="current-hours">Current hours:</label>
+    <input id="current-hours" type="number" oninput="updateCalc(false)" value="0" />
+    <hr />
+    <div id="pace-section">
+      <div id="direct-pace">
+        <p>Enter how many hours you plan to get per day (average)</p>
+        <label for="direct-pace-input">Hours per day</label>
+        <input id="direct-pace-input" oninput="updateCalc(false)" value="1" />
+      </div>
+
+      <div id="calculated-pace" class="hidden">
+        <p>Enter how many hours you had on a previous date</p>
+        <label for="calculated-pace-date-input">Date:</label>
+        <input
+          id="calculated-pace-date-input"
+          placeholder="MM/DD/YYYY"
+          oninput="updateCalc(false)"
+        />
+        <label for="calculated-pace-hours-input">Hours:</label>
+        <input id="calculated-pace-hours-input" oninput="updateCalc(false)" />
+      </div>
+      <button id="switch-pace-type" onclick="switchPaceType()">
+        Switch to auto-calculating pace
+      </button>
+    </div>
+    <hr />
+    <button onclick="updateCalc()">Calculate</button>
+    <h4 id="output">Total hours:</h4>
+    <h4 id="grant">Grant money:</h4>
+    <hr />
+    <p>Optional values</p>
+    <label for="end-date">End date:</label>
+    <input id="end-date" value="2/21/2027" />
+
+    <script>
+      let paceType = "direct";
+      function switchPaceType() {
+        const d = document.getElementById("direct-pace");
+        const c = document.getElementById("calculated-pace");
+        const btn = document.getElementById("switch-pace-type");
+        paceType = paceType === "direct" ? "calculated" : "direct";
+        if (paceType === "direct") {
+          d.classList.remove("hidden");
+          c.classList.add("hidden");
+          btn.textContent = "Switch to auto-calculated pace";
+        } else {
+          d.classList.add("hidden");
+          c.classList.remove("hidden");
+          btn.textContent = "Switch to direct pace";
+        }
+      }
+
+      function updateCalc(run = true) {
+        if (!run) return;
+        // This line, 47, is written by AI, but I can understand it: Get the date in EST, formatted as MM/DD/YYYY and convert it into MS
+        const current = Date.parse(
+          new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" }),
+        );
+        let pace = Number(document.getElementById("direct-pace-input").value);
+        if (paceType === "calculated") {
+          let diff =
+            Date.parse(new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" })) -
+            Date.parse(document.getElementById("calculated-pace-date-input").value);
+          diff = Math.abs(Math.round(diff / (1000 * 60 * 60 * 24)));
+          if (diff <= 0) {
+            error("Pace date is invalid (current or future date)");
+            return;
+          }
+          // Now that diff is in a number of days, figure out the pace
+          pace =
+            Number(document.getElementById("current-hours").value) -
+            document.getElementById("calculated-pace-hours-input").value / diff;
+        }
+        const end = Number(Date.parse(document.getElementById("end-date").value));
+        const timeTillEnd = Math.round((end - current) / (1000 * 60 * 60 * 24));
+        const hoursGained = timeTillEnd * pace;
+        const hours = Number(document.getElementById("current-hours").value) + hoursGained;
+        if (typeof hours !== "number" || hours === Infinity) {
+          error("Invalid input");
+          return;
+        }
+        document.getElementById("output").textContent = `Total hours: ${hours}`;
+        document.getElementById("grant").textContent =
+          `Grant money: $${Math.floor((hours * 30) / 115) * 25}`;
+      }
+      function error(msg) {
+        alert(msg);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,41 @@
+.hidden {
+  display: none;
+}
+
+hr {
+  border: none;
+  margin: 24px 0px;
+  height: 5px;
+  background-color: darkslategray;
+  border-radius: 20px;
+}
+
+button {
+  border: none;
+  border-radius: 20px;
+  background-color: lightskyblue;
+  transition: 0.5s all;
+  position: relative;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+button:hover {
+  scale: 1.05;
+}
+
+button::after {
+  content: "";
+  inset: 0;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0);
+  transition: 0.5s all;
+}
+
+button:hover::after {
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+body {
+  padding-left: 1vw;
+}
