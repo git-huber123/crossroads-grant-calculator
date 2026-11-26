@@ -30,3 +30,8 @@ at the rate of 115 stamps per $25 grant.
 ### In progress
 
 I'm working on a graphing system that'll let you see your progress in real time.
+
+### AI
+
+I used barely any AI for this project: I used AI to help a little bit with styling, to help with some
+of the uses of the Date object, and a few other things.
