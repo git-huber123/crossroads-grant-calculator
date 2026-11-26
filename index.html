@@ -24,6 +24,8 @@
       <input id="current-hours" oninput="updateCalc(false)" value="0" />
       <label for="goal">Goal hours:</label>
       <input id="goal" type="number" value="100" />
+      <label for="mult">Multiplier (e.g. Golden Stamp)</label>
+      <input id="mult" value="1" oninput="updateCalc(false)" />
       <hr />
       <div id="pace-section">
         <div id="direct-pace">
@@ -50,7 +52,11 @@
       <hr />
       <button onclick="updateCalc()">Calculate</button>
       <h4 id="output">Total hours:</h4>
+      <p>How many hours you'll have put in by the end</p>
+      <h4 id="stamps">Total stamps:</h4>
+      <p>How many stamps you'll have earned by the end</p>
       <h4 id="grant">Grant money:</h4>
+      <p>How much grant money those stamps could buy, all of them</p>
       <hr />
       <p>Optional values</p>
       <label for="end-date">End date:</label>
@@ -134,10 +140,12 @@
       let end = localStorage.getItem("end") || "2/21/2027";
       let goal = localStorage.getItem("goal") || 100;
       let logs = localStorage.getItem("logs") || {};
+      let mult = localStorage.getItem("mult") || 1;
       e("current-hours").value = hours;
       e("direct-pace").value = pace;
       e("end-date").value = end;
       e("goal").value = goal;
+      e("mult").value = mult;
 
       function e(e) {
         return document.getElementById(e);
@@ -188,6 +196,7 @@
       }
 
       function updateCalc(run = true) {
+        mult = e("mult").value;
         //if (!run) return;
         // This line, 47, is written by AI, but I can understand it: Get the date in EST, formatted as MM/DD/YYYY and convert it into MS
         const current = Date.parse(
@@ -218,8 +227,10 @@
         }
         hours = Number(document.getElementById("current-hours").value);
         document.getElementById("output").textContent = `Total hours: ${endHours}`;
+        document.getElementById("stamps").textContent =
+          "Total stamps: " + Math.round(endHours * 30 * mult);
         document.getElementById("grant").textContent =
-          `Grant money: $${Math.floor((endHours * 30) / 115) * 25}`;
+          `Grant money: $${Math.floor((endHours * 30 * mult) / 115) * 25}`;
         saveValues();
       }
       function error(msg) {
