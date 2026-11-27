@@ -71,6 +71,7 @@
       <label for="log-hours">Total hours:</label>
       <input id="log-hours" />
       <button onclick="log()">Log</button>
+      <div id="log-wrapper"></div>
     </div>
 
     <div id="graph-page" class="hidden">
@@ -85,8 +86,12 @@
         if (logs[e("log-date").value] && !confirm("This date already has a log, overwrite it?"))
           return;
         if (e("log-date").value.split("/").filter(Boolean).length !== 3) return;
+        if (Date.parse(getCurrentDate()) + 24 * 60 * 60 * 1000 < Date.parse(e("log-date"))) {
+          error("This date hasn't happened yet!");
+          return;
+        }
         const date = e("log-date").value;
-        const hours = e("log-hours").value;
+        const hours = Number(e("log-hours").value);
         logs[date] = { date, hours };
         e("log-date").value = "";
         e("log-hours").value = 0;
@@ -116,7 +121,7 @@
         // make an arc at the center point, starting at 0 deg and going to 360 deg (2pi rads), aka a CIRCLE
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         // set color and actually fill the circle in
-        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
         ctx.fill();
       }
 
@@ -132,13 +137,13 @@
 
       function renderGraph() {
         // these 2 variables are supplied by ai, since I have no clue what the min and max are, unlike with +/- infinity
-        let minDate = "-271821-04-20T00:00:00.000Z";
-        let maxDate = "+275760-09-13T00:00:00.000Z";
+        let maxDate = "-271821-04-20T00:00:00.000Z";
+        let minDate = "+275760-09-13T00:00:00.000Z";
         let maxHours = 0;
         ctx.clearRect(0, 0, graph.width, graph.height);
         if (Object.entries(logs).length === 0) return;
         for (const [date, v] of Object.entries(logs)) {
-          const hours = v.hours;
+          const hours = Number(v.hours);
           if (Date.parse(date) < Date.parse(minDate)) minDate = date;
           if (Date.parse(date) > Date.parse(maxDate)) maxDate = date;
           if (hours > maxHours) maxHours = hours;
@@ -149,7 +154,7 @@
         line(startX, startY, startX, graph.height - startY);
         line(startX, startY, graph.width - startX, startY);
         if (count <= 0) return;
-        const spacing = (graph.width - startX * 2) / (count + 1);
+        const spacing = (graph.width - startX * 2) / (count - 1);
         // sort by date, first date comes first
         let slogs = [];
         for (const [k, v] of Object.entries(logs)) {
@@ -160,21 +165,55 @@
           const e = slogs[i];
           const d = e.date;
           const h = e.hours;
-          const x = Math.round(startX + spacing * (i + 1));
           const y = Math.round(startY + (graph.height - startY * 2) * (h / maxHours));
-          circle(x, y, 10);
-          if (i > 0) {
+          if (i < slogs.length - 1) {
+            const ds = (Date.parse(maxDate) - Date.parse(minDate)) / (24 * 60 * 60 * 1000);
+            const dfs = (Date.parse(d) - Date.parse(minDate)) / (24 * 60 * 60 * 1000);
+            const ndfs =
+              (Date.parse(slogs[i + 1].date) - Date.parse(minDate)) / (24 * 60 * 60 * 1000);
+
+            const x = Math.round(startX + (graph.width - startX * 2) * (dfs / ds));
+            const nx = Math.round(startX + (graph.width - startX * 2) * (ndfs / ds));
             line(
               x,
               y,
-              Math.round(startX + spacing * i),
-              Math.round(startY + (graph.height - startY * 2) * (slogs[i - 1].hours / maxHours)),
+              nx,
+              Math.round(startY + (graph.height - startY * 2) * (slogs[i + 1].hours / maxHours)),
             );
           }
         }
+
+        const diff = (Date.parse(maxDate) - Date.parse(minDate)) / (24 * 60 * 60 * 1000);
+        const endingHours = diff * Number(pace);
+        line(
+          startX,
+          startY,
+          graph.width - startX,
+          startY - (endingHours / maxHours) * (graph.height - 50),
+          "blue",
+        );
       }
 
-      function renderLogs() {}
+      function getCurrentDate() {
+        return new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" });
+      }
+
+      function renderLogs() {
+        e("log-wrapper").innerHTML = "";
+        for (const [date, info] of Object.entries(logs).sort(
+          (a, b) => Date.parse(b[0]) - Date.parse(a[0]),
+        )) {
+          const div = document.createElement("div");
+          const h = document.createElement("h4");
+          const d = document.createElement("p");
+          h.textContent = info.hours;
+          d.textContent = date;
+          div.appendChild(h);
+          div.appendChild(d);
+          e("log-wrapper").appendChild(div);
+          div.classList.add("log-item");
+        }
+      }
 
       let hours = localStorage.getItem("hours") || 0;
       let pace = localStorage.getItem("pace") || 1;
@@ -212,7 +251,7 @@
       updateRenderedValues();
       function switchPage(p) {
         currentPage = p;
-        if (p === "graph") renderLogsAndGraph();
+        renderLogsAndGraph();
         for (const t of ["calculator", "log", "graph", "planner"]) {
           document.getElementById(t + "-page").classList.add("hidden");
         }
@@ -240,13 +279,11 @@
         mult = e("mult").value;
         //if (!run) return;
         // This line, 47, is written by AI, but I can understand it: Get the date in EST, formatted as MM/DD/YYYY and convert it into MS
-        const current = Date.parse(
-          new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" }),
-        );
+        const current = Date.parse(getCurrentDate());
         pace = Number(document.getElementById("direct-pace-input").value);
         if (paceType === "calculated") {
           let diff =
-            Date.parse(new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" })) -
+            Date.parse(getCurrentDate()) -
             Date.parse(document.getElementById("calculated-pace-date-input").value);
           diff = Math.abs(Math.round(diff / (1000 * 60 * 60 * 24)));
           if (diff <= 0) {
@@ -266,7 +303,7 @@
           error("Invalid input");
           return;
         }
-        hours = Number(document.getElementById("current-hours").value);
+        const hours = Number(document.getElementById("current-hours").value);
         document.getElementById("output").textContent = `Total hours: ${endHours}`;
         document.getElementById("stamps").textContent =
           "Total stamps: " + Math.round(endHours * 30 * mult);

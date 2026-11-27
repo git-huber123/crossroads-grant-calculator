@@ -9,6 +9,27 @@
   height: 10vh;
 }
 
+#log-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: left;
+  gap: 10px;
+  padding: 10px;
+}
+
+.log-item {
+  display: flex;
+  justify-content: left;
+  flex-direction: row;
+  align-items: center;
+  background-color: white;
+  gap: 20px;
+  width: fit-content;
+  border-radius: 20px;
+  padding: 10px;
+}
+
 #graph {
   width: 100%;
   aspect-ratio: 16/10;
