@@ -7,9 +7,10 @@
   <body>
     <div>
       <div id="header-btns">
-        <button class="bigbtn" onclick="switchPage('calculator')">Calculator</button>
+        <button class="bigbtn" onclick="switchPage('planner')">Planner</button>
         <button class="bigbtn" onclick="switchPage('log')">Log</button>
         <button class="bigbtn" onclick="switchPage('graph')">Graph view</button>
+        <button class="bigbtn" onclick="switchPage('calculator')">Calculator (legacy)</button>
       </div>
       <div id="goal-div">
         <p id="goal-label">0 hours out of 100 hours</p>
@@ -18,7 +19,7 @@
     </div>
 
     <hr />
-    <div id="calculator-page">
+    <div id="calculator-page" class="hidden">
       <h1>Crossroads Grant Calculator</h1>
       <label for="current-hours">Current hours:</label>
       <input id="current-hours" oninput="updateCalc(false)" value="0" />
@@ -68,7 +69,7 @@
       <label for="log-date">Date:</label>
       <input id="log-date" />
       <label for="log-hours">Total hours:</label>
-      <input for="log-hours" />
+      <input id="log-hours" />
       <button onclick="log()">Log</button>
     </div>
 
@@ -77,12 +78,19 @@
       <canvas id="graph"></canvas>
     </div>
 
+    <div id="planner-page"></div>
+
     <script>
       function log() {
-        if (logs[date] && !confirm("This date already has a log, overwrite it?")) return;
+        if (logs[e("log-date").value] && !confirm("This date already has a log, overwrite it?"))
+          return;
+        if (e("log-date").value.split("/").filter(Boolean).length !== 3) return;
         const date = e("log-date").value;
         const hours = e("log-hours").value;
         logs[date] = { date, hours };
+        e("log-date").value = "";
+        e("log-hours").value = 0;
+        saveValues();
         renderLogsAndGraph();
       }
 
@@ -126,20 +134,53 @@
         // these 2 variables are supplied by ai, since I have no clue what the min and max are, unlike with +/- infinity
         let minDate = "-271821-04-20T00:00:00.000Z";
         let maxDate = "+275760-09-13T00:00:00.000Z";
+        let maxHours = 0;
         ctx.clearRect(0, 0, graph.width, graph.height);
         if (Object.entries(logs).length === 0) return;
         for (const [date, v] of Object.entries(logs)) {
           const hours = v.hours;
           if (Date.parse(date) < Date.parse(minDate)) minDate = date;
           if (Date.parse(date) > Date.parse(maxDate)) maxDate = date;
+          if (hours > maxHours) maxHours = hours;
+        }
+        let count = Object.entries(logs).length;
+        const startX = 25;
+        const startY = graph.height - 25;
+        line(startX, startY, startX, graph.height - startY);
+        line(startX, startY, graph.width - startX, startY);
+        if (count <= 0) return;
+        const spacing = (graph.width - startX * 2) / (count + 1);
+        // sort by date, first date comes first
+        let slogs = [];
+        for (const [k, v] of Object.entries(logs)) {
+          slogs.push({ date: k, hours: v.hours });
+        }
+        slogs.sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+        for (let i = 0; i < slogs.length; i++) {
+          const e = slogs[i];
+          const d = e.date;
+          const h = e.hours;
+          const x = Math.round(startX + spacing * (i + 1));
+          const y = Math.round(startY + (graph.height - startY * 2) * (h / maxHours));
+          circle(x, y, 10);
+          if (i > 0) {
+            line(
+              x,
+              y,
+              Math.round(startX + spacing * i),
+              Math.round(startY + (graph.height - startY * 2) * (slogs[i - 1].hours / maxHours)),
+            );
+          }
         }
       }
+
+      function renderLogs() {}
 
       let hours = localStorage.getItem("hours") || 0;
       let pace = localStorage.getItem("pace") || 1;
       let end = localStorage.getItem("end") || "2/21/2027";
       let goal = localStorage.getItem("goal") || 100;
-      let logs = localStorage.getItem("logs") || {};
+      let logs = JSON.parse(localStorage.getItem("logs")) || {};
       let mult = localStorage.getItem("mult") || 1;
       e("current-hours").value = hours;
       e("direct-pace").value = pace;
@@ -165,14 +206,14 @@
         localStorage.setItem("pace", pace || 1);
         localStorage.setItem("end", end || 0);
         localStorage.setItem("goal", goal || 100);
-        localStorage.setItem("logs", logs || {});
+        localStorage.setItem("logs", JSON.stringify(logs));
         updateRenderedValues();
       }
       updateRenderedValues();
       function switchPage(p) {
         currentPage = p;
         if (p === "graph") renderLogsAndGraph();
-        for (const t of ["calculator", "log", "graph"]) {
+        for (const t of ["calculator", "log", "graph", "planner"]) {
           document.getElementById(t + "-page").classList.add("hidden");
         }
         document.getElementById(p + "-page").classList.remove("hidden");
