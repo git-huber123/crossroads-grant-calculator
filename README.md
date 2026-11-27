@@ -1,5 +1,11 @@
 # Crossroads Grant Calculator
 
+### Time tracking
+
+| Commit              | Hours | Total | Notes                                                                                                                                             |
+| ------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Calendar + refactor | 5.1   | 5.1   | I initially didn't have this chart, but decided I should implement it because the tracker is growing in scope a lot more than I initially thought |
+
 ### Description
 
 I created this calculator because I didn't want to keep on trying to figure out

@@ -9,6 +9,37 @@
   height: 10vh;
 }
 
+.calendar-div {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.fillerCalenderCell {
+  background-color: transparent;
+  color: transparent;
+}
+
+.headerCalendarCell {
+  background-color: transparent;
+  border-color: black;
+  border-radius: 3px;
+}
+
+.pastCell {
+  background-color: rgb(104, 225, 104);
+}
+
+.todayCell {
+  border-width: 10px;
+}
+
+#planner-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: center;
+}
+
 #log-wrapper {
   display: flex;
   flex-direction: column;
