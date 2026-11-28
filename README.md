@@ -2,9 +2,10 @@
 
 ### Time tracking
 
-| Commit              | Hours | Total | Notes                                                                                                                                             |
-| ------------------- | ----- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Calendar + refactor | 5.1   | 5.1   | I initially didn't have this chart, but decided I should implement it because the tracker is growing in scope a lot more than I initially thought |
+| Commit              | Hours Gained | Total | Notes                                                                                                                                             |
+| ------------------- | ------------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| render calendar     | 1.1          | 6.2   | Pretty proud of my calendar!                                                                                                                      |
+| Calendar + refactor | 5.1          | 5.1   | I initially didn't have this chart, but decided I should implement it because the tracker is growing in scope a lot more than I initially thought |
 
 ### Description
 
