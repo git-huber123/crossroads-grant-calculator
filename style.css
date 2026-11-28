@@ -1,5 +1,9 @@
 .hidden {
-  display: none;
+  display: none !important;
+}
+
+.transparent {
+  color: transparent !important;
 }
 
 #header-btns {
@@ -12,6 +16,25 @@
 .calendar-div {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 50px;
+  padding: 30px;
+}
+
+.calendarInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 5px;
+}
+
+#planner-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .fillerCalenderCell {
@@ -25,19 +48,48 @@
   border-radius: 3px;
 }
 
+.exitButtonWrapper {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  flex-direction: row;
+}
+
+.exitButton {
+  background-color: red;
+  width: 5vw;
+  height: 5vh;
+}
+
+#createPopup {
+  padding: 15px;
+  position: fixed;
+  z-index: 1000;
+  max-width: 75vw;
+  max-height: 90vh;
+  aspect-ratio: 1/1;
+  inset: 0;
+  margin: auto;
+  background-color: black;
+  border-radius: 20px;
+}
+
 .pastCell {
   background-color: rgb(104, 225, 104);
 }
 
-.todayCell {
-  border-width: 10px;
+.hours {
+  text-align: center;
 }
 
-#planner-page {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: center;
+.calendarCell {
+  aspect-ratio: 1/1;
+  border: 5px solid black;
+}
+
+.todayCell {
+  box-shadow: 0 0 20px 10px #00f3ff;
+  z-index: 1;
 }
 
 #log-wrapper {

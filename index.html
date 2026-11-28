@@ -5,11 +5,6 @@
     <link href="style.css" rel="stylesheet" />
   </head>
   <body>
-    <script>
-      function getCurrentDate() {
-        return new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" });
-      }
-    </script>
     <div>
       <div id="header-btns">
         <button class="bigbtn" onclick="switchPage('planner')">Planner</button>
@@ -87,20 +82,82 @@
 
     <div id="planner-page">
       <div id="toolbox">
-        <button onclick="switchTool('create')">Create a new day type</button>
-        <button onclick="switchTool('assign')">Assign day types</button>
-        <button onclick="switchTool('calculate')">Fill in the variable day amounts</button>
-        <button onclick="switchTool('deadline')">Assign a deadline to buy an item</button>
-        <button onclick="switchTool('delete')">Remove a day type</button>
+        <button onclick="useCalendarTool('create')">Create a new day type</button>
+        <button onclick="useCalendarTool('assign')">Assign day types</button>
+        <button onclick="useCalendarTool('calculate')">Fill in the variable day amounts</button>
+        <button onclick="useCalendarTool('deadline')">Assign a deadline to buy an item</button>
+        <button onclick="useCalendarTool('delete')">Reset a day</button>
       </div>
       <div class="calendar-div" id="november-div"></div>
       <div class="calendar-div" id="december-div"></div>
       <div class="calendar-div" id="january-div"></div>
       <div class="calendar-div" id="february-div"></div>
       <div class="calendar-div" id="march-div"></div>
+      <div id="createPopup" class="hidden">
+        <div class="exitButtonWrapper">
+          <button onclick="exitPopup()" class="exitButton">Exit</button>
+        </div>
+      </div>
     </div>
 
     <script>
+      function getEl(id) {
+        return document.getElementById(id);
+      }
+
+      function getCurrentDate() {
+        return new Date().toLocaleDateString("en-US", { timeZone: "America/New_York" });
+      }
+      function convertToDate(ms) {
+        return new Date(ms).toLocaleDateString("en-US");
+      }
+      let goal = localStorage.getItem("goal") || 100;
+      let logs = JSON.parse(localStorage.getItem("logs")) || {};
+      getEl("goal").value = goal;
+    </script>
+
+    <script>
+      const dayTypes = {};
+      const days = {};
+      function renderCalendar() {
+        const startDate = "11/1/2026";
+        const currentDate = getCurrentDate();
+        const endDate = "3/31/2027";
+        const daysLeft = (Date.parse(endDate) - Date.parse(startDate)) / (24 * 60 * 60 * 1000);
+        let latestLogEntryHours = 0;
+        for (let i = 0; i < daysLeft; i++) {
+          const date = Date.parse(new Date(2026, 10, 1 + i).toLocaleDateString("en-US"));
+          // needs new Date and all because nov 1 was daylight savings and so it's messed up
+          const el = getEl("hours-" + date);
+          if (
+            logs[convertToDate(date)] &&
+            logs[convertToDate(date)]?.hours >= latestLogEntryHours
+          ) {
+            latestLogEntryHours = logs[convertToDate(date)].hours;
+          }
+          if (date > Date.parse(currentDate)) {
+            el.classList.add("transparent");
+          } else {
+            el.classList.remove("transparent");
+          }
+          el.textContent = latestLogEntryHours + " hours";
+
+          console.log(el);
+        }
+      }
+      function exitPopup() {
+        getEl("createPopup").classList.add("hidden");
+      }
+      let currentToolType = null;
+      function useCalendarTool(type) {
+        switch (type) {
+          case "create": {
+            getEl("createPopup").classList.remove("hidden");
+            break;
+          }
+        }
+        renderCalendar();
+      }
       function getDay(d) {
         const [month, day, year] = d.split("/").filter(Boolean); // split into 3 variables
         const date = new Date(year, month - 1, day); // Turn the month day and year into an actual date
@@ -113,9 +170,6 @@
           abr: "sun,mon,tue,wed,thu,fri,sat".split(",")[num],
         };
       }
-      function getEl(id) {
-        return document.getElementById(id);
-      }
       for (const [month, dayCount, startDate] of [
         ["november", 30, "11/1/2026"],
         ["december", 31, "12/1/2026"],
@@ -125,9 +179,9 @@
       ]) {
         const mainDiv = getEl(month + "-div");
         for (let i = 0; i < 7; i++) {
-          const d = document.createElement("div");
+          const d = document.createElement("p");
           d.classList.add("headerCalendarCell");
-          d.textContent = getDayInfo(i).day;
+          d.textContent = getDayInfo(i).abr;
           mainDiv.appendChild(d);
         }
         const startingDay = getDay(startDate);
@@ -145,17 +199,20 @@
 
           const infoDiv = document.createElement("div");
           const name = document.createElement("p");
-          name.textContent = info.abr;
+          //name.textContent = info.abr;
           const date = document.createElement("h4");
-          date.textContent = i;
+          date.textContent = i + 1;
           infoDiv.appendChild(name);
           infoDiv.appendChild(date);
           div.appendChild(infoDiv);
+
+          infoDiv.classList.add("calendarInfo");
 
           const hours = document.createElement("p");
           const current = getCurrentDate();
           hours.classList.add("hours");
           hours.dataset.info = dstring;
+          hours.id = "hours-" + Date.parse(dstring);
 
           div.appendChild(hours);
 
@@ -165,25 +222,27 @@
             div.classList.add("pastCell");
           }
 
+          div.classList.add("calendarCell");
           mainDiv.appendChild(div);
         }
       }
+      renderCalendar();
     </script>
 
     <script>
       function log() {
-        if (logs[e("log-date").value] && !confirm("This date already has a log, overwrite it?"))
+        if (logs[getEl("log-date").value] && !confirm("This date already has a log, overwrite it?"))
           return;
-        if (e("log-date").value.split("/").filter(Boolean).length !== 3) return;
-        if (Date.parse(getCurrentDate()) + 24 * 60 * 60 * 1000 < Date.parse(e("log-date"))) {
+        if (getEl("log-date").value.split("/").filter(Boolean).length !== 3) return;
+        if (Date.parse(getCurrentDate()) + 24 * 60 * 60 * 1000 < Date.parse(getEl("log-date"))) {
           error("This date hasn't happened yet!");
           return;
         }
-        const date = e("log-date").value;
-        const hours = Number(e("log-hours").value);
+        const date = getEl("log-date").value;
+        const hours = Number(getEl("log-hours").value);
         logs[date] = { date, hours };
-        e("log-date").value = "";
-        e("log-hours").value = 0;
+        getEl("log-date").value = "";
+        getEl("log-hours").value = 0;
         saveValues();
         renderLogsAndGraph();
       }
@@ -274,13 +333,13 @@
 
         const diff = (Date.parse(maxDate) - Date.parse(minDate)) / (24 * 60 * 60 * 1000);
         const avgPace = (slogs[slogs.length - 1].hours - slogs[0].hours) / diff;
-        e("pace-info").textContent =
+        getEl("pace-info").textContent =
           "Average pace is " + Math.round(avgPace * 10) / 10 + " hours per day";
         line(startX, startY, graph.width - startX, 25, "blue");
       }
 
       function renderLogs() {
-        e("log-wrapper").innerHTML = "";
+        getEl("log-wrapper").innerHTML = "";
         for (const [date, info] of Object.entries(logs).sort(
           (a, b) => Date.parse(b[0]) - Date.parse(a[0]),
         )) {
@@ -291,18 +350,11 @@
           d.textContent = date;
           div.appendChild(h);
           div.appendChild(d);
-          e("log-wrapper").appendChild(div);
+          getEl("log-wrapper").appendChild(div);
           div.classList.add("log-item");
         }
       }
 
-      let goal = localStorage.getItem("goal") || 100;
-      let logs = JSON.parse(localStorage.getItem("logs")) || {};
-      e("goal").value = goal;
-
-      function e(e) {
-        return document.getElementById(e);
-      }
       function updateRenderedValues() {
         //hours = localStorage.getItem("hours") || 0;
         //pace = localStorage.getItem("pace") || 1;
@@ -310,11 +362,11 @@
         //goal = localStorage.getItem("goal") || 100;
 
         const hours = Object.values(logs).sort((a, b) => b.hours - a.hours)[0]?.hours || 0;
-        e("goal-label").textContent = hours + " hours out of " + goal + " hours";
-        e("goal-bar").style.setProperty("--fill", Math.round((hours / goal) * 100) + "%");
+        getEl("goal-label").textContent = hours + " hours out of " + goal + " hours";
+        getEl("goal-bar").style.setProperty("--fill", Math.round((hours / goal) * 100) + "%");
       }
       function saveValues() {
-        goal = e("goal").value;
+        goal = getEl("goal").value;
         localStorage.setItem("goal", goal || 100);
         localStorage.setItem("logs", JSON.stringify(logs));
         updateRenderedValues();
@@ -347,7 +399,7 @@
       }
 
       function updateCalc(checkValid = true) {
-        let mult = e("mult").value;
+        let mult = getEl("mult").value;
         //if (!run) return;
         // This line, 47, is written by AI, but I can understand it: Get the date in EST, formatted as MM/DD/YYYY and convert it into MS
         const current = Date.parse(getCurrentDate());
